@@ -1,0 +1,39 @@
+[Unit]
+Description=AIDEV-OPS Autonomous AI Development System
+Documentation=https://github.com/your-repo/aidev-ops
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=simple
+User=aidev
+Group=aidev
+WorkingDirectory=/opt/aidev
+ExecStart=/opt/aidev/venv/bin/python /opt/aidev/main.py start --foreground
+ExecStop=/bin/kill -SIGTERM $MAINPID
+Restart=always
+RestartSec=10
+StartLimitBurst=5
+StartLimitIntervalSec=60
+
+# Environment
+EnvironmentFile=-/opt/aidev/.env
+
+# Security
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/opt/aidev
+ProtectHome=yes
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=aidev
+
+# Resource limits
+MemoryMax=2G
+CPUQuota=150%
+
+[Install]
+WantedBy=multi-user.target

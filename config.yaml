@@ -1,0 +1,118 @@
+# ============================================================
+# AIDEV-OPS-Server Configuration
+# ============================================================
+
+server:
+    mode: production
+    port: 9000
+    data_dir: /opt/aidev
+    pid_file: /opt/aidev/aidev.pid
+
+# ------------------------------------------------------------
+# AI Provider Configuration
+# ------------------------------------------------------------
+ai:
+    strategy: api-only
+    default_provider: nvidia
+
+    providers:
+        nvidia:
+            base_url: https://integrate.api.nvidia.com/v1
+            api_keys:
+                - ${NVIDIA_API_KEY_1}
+                - ${NVIDIA_API_KEY_2}
+            key_strategy: round-robin # round-robin | failover
+
+    # Role → Model mapping
+    roles:
+        planner:
+            provider: nvidia
+            model: moonshotai/kimi-k2.5
+            temperature: 1.0
+            top_p: 1.0
+            max_tokens: 16384
+            extra:
+                chat_template_kwargs:
+                    thinking: true
+            system_prompt: |
+                You are a senior software architect and project planner.
+                Break down tasks into clear, actionable steps.
+                Consider dependencies, risks, and edge cases.
+                Output structured plans with priorities.
+
+        architect:
+            provider: nvidia
+            model: moonshotai/kimi-k2.5
+            temperature: 0.8
+            top_p: 0.9
+            max_tokens: 16384
+            system_prompt: |
+                You are a system architect. Design robust, maintainable software.
+                Consider scalability, security, and performance.
+                Produce clear technical specifications and component designs.
+
+        coder:
+            provider: nvidia
+            model: qwen/qwen3-coder-480b-a35b-instruct
+            temperature: 0.7
+            top_p: 0.8
+            max_tokens: 4096
+            system_prompt: |
+                You are an expert software developer.
+                Write clean, well-documented code.
+                Follow project constraints: PHP 5.6, MySQLi procedural, Bootstrap 4.
+                Generate patches/diffs when modifying existing code.
+
+        reviewer:
+            provider: nvidia
+            model: qwen/qwen3-next-80b-a3b-instruct
+            temperature: 0.6
+            top_p: 0.7
+            max_tokens: 4096
+            system_prompt: |
+                You are a code reviewer focused on security and quality.
+                Check for: destructive SQL, hardcoded secrets, unsafe shell commands.
+                Verify PHP 5.6 compatibility and MySQLi usage.
+                Respond with PASS or FAIL with detailed reasons.
+
+# ------------------------------------------------------------
+# Docker Configuration
+# ------------------------------------------------------------
+docker:
+    base_image: ubuntu:22.04
+    memory_limit: 512m
+    cpu_limit: 1.0
+    max_containers: 2
+    network: aidev-net
+
+# ------------------------------------------------------------
+# GitHub Configuration
+# ------------------------------------------------------------
+github:
+    poll_interval: 300 # seconds (5 minutes)
+    auto_commit: true
+    auto_push: true
+    branch_prefix: aidev/
+    pat_token: ${GITHUB_PAT}
+
+# ------------------------------------------------------------
+# Project Defaults
+# ------------------------------------------------------------
+projects:
+    base_dir: /opt/aidev/projects
+    states:
+        - idle
+        - building
+        - testing
+        - deployed
+        - blocked
+
+# ------------------------------------------------------------
+# Logging
+# ------------------------------------------------------------
+logging:
+    level: INFO
+    dir: /opt/aidev/logs
+    max_size_mb: 50
+    backup_count: 5
+    format: '%(asctime)s [%(levelname)s] %(name)s: %(message)s'

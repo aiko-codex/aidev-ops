@@ -1,0 +1,43 @@
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Core packages
+RUN apt-get update && apt-get install -y \
+    apache2 \
+    git \
+    curl \
+    wget \
+    python3 \
+    python3-pip \
+    mysql-client \
+    software-properties-common \
+    && rm -rf /var/lib/apt/lists/*
+
+# PHP 5.6 via PPA
+RUN add-apt-repository ppa:ondrej/php -y \
+    && apt-get update \
+    && apt-get install -y \
+    php5.6 \
+    php5.6-mysql \
+    php5.6-curl \
+    php5.6-gd \
+    php5.6-mbstring \
+    php5.6-xml \
+    libapache2-mod-php5.6 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Apache configuration
+RUN a2enmod rewrite \
+    && echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
+# Set PHP 5.6 as default
+RUN update-alternatives --set php /usr/bin/php5.6
+
+# Working directory
+WORKDIR /workspace
+
+# Expose Apache port
+EXPOSE 80
+
+CMD ["tail", "-f", "/dev/null"]
