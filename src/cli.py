@@ -339,6 +339,60 @@ def ai_stats(ctx):
         click.echo(f"  • Key {p['key_suffix']}: {p['requests']} requests, {p['errors']} errors")
 
 
+# ──────────────────────────────────────────────
+# Kickstart (build from PRD)
+# ──────────────────────────────────────────────
+
+@cli.command()
+@click.argument('project_name')
+@click.option('--prd', '-p', default=None, help='Custom path to PRD file')
+@click.pass_context
+def kickstart(ctx, project_name, prd):
+    """Build a project from its PRD.md file.
+
+    Reads the PRD from the project repo, breaks it into tasks,
+    generates code with AI, reviews for safety, and commits.
+
+    Example: aidev kickstart todox
+    """
+    config = ctx.obj['config']
+
+    click.echo(f"🚀 Kickstarting project: {project_name}")
+    click.echo(f"   This will read the PRD and build the project with AI.")
+    click.echo(f"   This may take several minutes...\n")
+
+    from src.ai.gateway import AIGateway
+    from src.project.manager import ProjectManager
+    from src.docker_engine.engine import DockerEngine
+    from src.git.agent import GitAgent
+    from src.workflow.kickstart import Kickstarter
+
+    ai_gateway = AIGateway(config)
+    project_manager = ProjectManager(config)
+    docker_engine = DockerEngine(config)
+    git_agent = GitAgent(config)
+
+    starter = Kickstarter(
+        config, ai_gateway, project_manager,
+        docker_engine, git_agent
+    )
+
+    result = starter.kickstart(project_name, prd_path=prd)
+
+    if result['success']:
+        click.echo(f"\n✅ Kickstart complete!")
+        click.echo(f"   Tasks completed: {result['completed']}/{result['total_tasks']}")
+        click.echo(f"\n   Results:")
+        for r in result['results']:
+            icon = "✅" if r['status'] == 'success' else "❌"
+            click.echo(f"   {icon} {r['task']} [{r['status']}]")
+            if r.get('files'):
+                for f in r['files']:
+                    click.echo(f"      → {f}")
+    else:
+        click.echo(f"\n❌ Kickstart failed: {result.get('error', 'Unknown error')}")
+
+
 def main():
     """Entry point for the CLI."""
     cli(obj={})
