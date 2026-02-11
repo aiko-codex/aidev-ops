@@ -137,6 +137,46 @@ aidev project add myapp --repo https://github.com/user/myapp
 aidev start
 ```
 
+## 🔄 Full Reset (Fresh Install on Server)
+
+If things get messy, nuke everything and start fresh:
+
+```bash
+# Download and run the reset script
+curl -O https://raw.githubusercontent.com/aiko-codex/AIDEV-OPS/main/scripts/reset.sh
+sudo bash reset.sh
+```
+
+This will:
+
+1. Stop the aidev service
+2. Delete `/opt/aidev` completely
+3. Fresh `git clone` from GitHub
+4. Setup Python venv + install deps
+5. Create `.env` from example
+6. Setup aidev user + systemd service
+7. Create the `aidev` CLI command
+
+After reset:
+
+```bash
+nano /opt/aidev/.env                  # Add your API keys
+aidev status                          # Verify setup
+aidev ai test                         # Test AI connection
+aidev project add todox --repo https://github.com/aiko-codex/todox.git
+aidev start -f                        # Start in foreground
+```
+
+### Updating Code (after git push from local)
+
+```bash
+cd /opt/aidev
+git pull
+aidev status    # New code is used immediately
+```
+
+Since the install now runs directly from the git clone (not a copy), `git pull` is all you need.
+
 ---
 
 ## 🔄 How It Works
