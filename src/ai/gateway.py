@@ -154,10 +154,15 @@ class AIGateway:
                     extra_params=role.extra if role.extra else None,
                 )
 
-                self.logger.info(
-                    f"[{role_name.upper()}] Response received "
-                    f"({len(response)} chars) via key #{idx+1}"
-                )
+                if stream:
+                    self.logger.info(
+                        f"[{role_name.upper()}] Streaming response started via key #{idx+1}"
+                    )
+                else:
+                    self.logger.info(
+                        f"[{role_name.upper()}] Response received "
+                        f"({len(response)} chars) via key #{idx+1}"
+                    )
                 return response
 
             except RateLimitError as e:

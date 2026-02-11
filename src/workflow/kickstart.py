@@ -12,6 +12,7 @@ Usage:
 
 import json
 import time
+import sys
 from pathlib import Path
 from src.logger import setup_logger
 from src.workflow.context import ContextBuilder
@@ -214,7 +215,8 @@ Example:
 
 Output ONLY the JSON array, no other text."""
 
-            response = self.ai.plan(prompt)
+            # Stream the response to show progress
+            response = self._stream_chat('planner', prompt)
             return self._parse_json_response(response)
 
         except Exception as e:
@@ -244,7 +246,7 @@ Provide:
 
 Be specific — the Coder AI will use your design to write the actual code."""
 
-            return self.ai.chat('architect', prompt, context=context)
+            return self._stream_chat('architect', prompt, context=context)
 
         except Exception as e:
             self.logger.error(f"Architecture failed: {e}")
@@ -278,7 +280,7 @@ Output format — for EACH file use exactly this format:
 <complete file content>
 === END FILE ==="""
 
-            response = self.ai.code(prompt, context=context)
+            response = self._stream_chat('coder', prompt, context=context)
             return self._parse_code_response(response)
 
         except Exception as e:
@@ -329,3 +331,31 @@ Output format — for EACH file use exactly this format:
                 current_content.append(line)
 
         return changes if changes else None
+
+    def _stream_chat(self, role, prompt, context=None):
+        """Stream AI response to stdout with feedback."""
+        print(f"   [{role.upper()}] ", end='', flush=True)
+
+        full_response = []
+        stream = self.ai.chat(role, prompt, context, stream=True)
+
+        # For code/architect, show some activity but don't flood
+        # For planner, dots are fine
+        last_update = time.time()
+
+        try:
+            for chunk in stream:
+                full_response.append(chunk)
+
+                # Visual feedback
+                if time.time() - last_update > 0.1:
+                    sys.stdout.write('·')
+                    sys.stdout.flush()
+                    last_update = time.time()
+
+            print(" ✅")  # Newline after stream ends
+            return "".join(full_response)
+
+        except Exception as e:
+            print(f" ❌ Error: {e}")
+            raise

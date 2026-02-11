@@ -122,12 +122,9 @@ class NvidiaProvider:
 
     def _handle_stream(self, completion):
         """Yield text chunks from a streaming response."""
-        full_response = []
         for chunk in completion:
             if chunk.choices and chunk.choices[0].delta.content is not None:
-                text = chunk.choices[0].delta.content
-                full_response.append(text)
-        return "".join(full_response)
+                yield chunk.choices[0].delta.content
 
     def health_check(self):
         """Quick health check — sends a minimal request."""
