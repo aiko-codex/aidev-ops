@@ -78,9 +78,10 @@ class NvidiaProvider:
             "stream": stream,
         }
 
-        # Add extra parameters (e.g., thinking mode for Kimi)
+        # Add extra parameters via extra_body (model-specific params like
+        # chat_template_kwargs for Kimi thinking mode)
         if extra_params:
-            payload.update(extra_params)
+            payload["extra_body"] = extra_params
 
         self.logger.debug(
             f"Sending request to {model} "

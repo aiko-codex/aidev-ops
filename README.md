@@ -177,6 +177,16 @@ aidev status    # New code is used immediately
 
 Since the install now runs directly from the git clone (not a copy), `git pull` is all you need.
 
+### Next when you make some changes
+
+```bash
+# Pull latest code
+cd /opt/aidev && git pull
+
+# Tell AIDEV-OPS to read the PRD and start building
+aidev kickstart todox
+```
+
 ---
 
 ## 🔄 How It Works
