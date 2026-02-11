@@ -175,7 +175,11 @@ class ProjectManager:
         ]
 
     def get_project_dir(self, name):
-        """Get the filesystem path for a project."""
+        """Get the source code directory for a project (where repo is cloned)."""
+        return self.projects_dir / name / "src"
+
+    def get_project_root(self, name):
+        """Get the top-level project directory (contains src/, logs/, patches/)."""
         return self.projects_dir / name
 
     def delete_project(self, name):

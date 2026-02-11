@@ -116,7 +116,28 @@ class GitAgent:
         Returns:
             bool: Success
         """
+        target_dir = Path(target_dir)
         auth_url = self._get_auth_url(repo_url)
+
+        # If target exists and has .git, it's already cloned — pull instead
+        if (target_dir / '.git').exists():
+            self.logger.info(f"Already cloned at {target_dir}, pulling instead")
+            return self.pull(str(target_dir))
+
+        # If target exists but is empty (created by ProjectManager), remove it
+        # so git clone can create it fresh
+        if target_dir.exists():
+            try:
+                if not any(target_dir.iterdir()):
+                    target_dir.rmdir()
+                else:
+                    self.logger.error(
+                        f"Target dir {target_dir} exists and is not empty"
+                    )
+                    return False
+            except Exception as e:
+                self.logger.error(f"Cannot prepare target dir: {e}")
+                return False
 
         args = ['clone']
         if branch:
